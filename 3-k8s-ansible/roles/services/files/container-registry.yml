@@ -1,0 +1,136 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: container-registry
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: container-registry
+  namespace: container-registry
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: container-registry-config
+  namespace: container-registry
+data:
+  config.yml: |
+    version: 0.1
+    http:
+      addr: :5000
+      relativeurls: true
+    storage:
+      filesystem:
+        rootdirectory: /var/lib/registry
+      delete:
+        enabled: true
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: container-registry-auth
+  namespace: container-registry
+type: Opaque
+data:
+  # registry-user:registry-password
+  auth: cmVnaXN0cnktdXNlcjokYXByMSRkS1RZS2JORyRnaC9DNmtEckhBWS8zcFc2R2ZKRmkvCg==
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: container-registry-env
+  namespace: container-registry
+type: Opaque
+data: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: container-registry
+  namespace: container-registry
+spec:
+  selector:
+    kubernetes.io/app: container-registry
+  ports:
+  - name: http
+    port: 5000
+    targetPort: http
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: container-registry
+  namespace: container-registry
+  annotations:
+    cert-manager.io/cluster-issuer: ca-issuer
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: container-registry-auth
+    nginx.ingress.kubernetes.io/auth-realm: "Authentication Required"
+spec:
+  rules:
+  - host: registry.k8scourse.serics.eu
+    http:
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: container-registry
+              port:
+                number: 5000
+  tls:
+  - hosts:
+    - registry.k8scourse.serics.eu
+    secretName: container-registry-tls
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: container-registry
+  namespace: container-registry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      kubernetes.io/app: container-registry
+  template:
+    metadata:
+      labels:
+        kubernetes.io/app: container-registry
+    spec:
+      containers:
+      - name: container-registry
+        image: public.ecr.aws/docker/library/registry:3.0.0
+        args:
+        - serve
+        - /etc/registry/config.yml
+        envFrom:
+        - secretRef:
+            name: container-registry-env
+        ports:
+        - name: http
+          containerPort: 5000
+        volumeMounts:
+        - name: config
+          mountPath: /etc/registry
+        - name: storage
+          mountPath: /var/lib/registry
+      volumes:
+      - name: config
+        configMap:
+          name: container-registry-config
+      - name: storage
+        persistentVolumeClaim:
+          claimName: container-registry

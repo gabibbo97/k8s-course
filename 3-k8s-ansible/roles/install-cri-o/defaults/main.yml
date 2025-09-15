@@ -1,0 +1,2 @@
+---
+cri_o_version: "{{ k8s_version }}"

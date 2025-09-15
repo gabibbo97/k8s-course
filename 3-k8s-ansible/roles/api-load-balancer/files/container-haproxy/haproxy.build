@@ -1,0 +1,4 @@
+[Build]
+ImageTag = latest
+SetWorkingDirectory = /usr/local/src/container-haproxy
+Pull = newer

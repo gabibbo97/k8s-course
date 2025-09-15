@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: public.ecr.aws/docker/library/nginx:1.29
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: html-config
+          mountPath: /usr/share/nginx/html/index.html
+          subPath: index.html
+        - name: html-secret
+          mountPath: /usr/share/nginx/html/secret.html
+          subPath: secret.html
+      volumes:
+      - name: html-config
+        configMap:
+          name: nginx-html
+      - name: html-secret
+        secret:
+          secretName: nginx-secret

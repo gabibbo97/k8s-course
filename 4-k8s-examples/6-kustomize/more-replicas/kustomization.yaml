@@ -1,0 +1,7 @@
+bases:
+  - ../base
+
+nameSuffix: -more-replicas
+
+patches:
+  - more-replicas.yaml

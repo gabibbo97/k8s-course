@@ -1,0 +1,42 @@
+---
+# prerequisites
+- name: Install required packages
+  apt:
+    name:
+      - gpg
+    update_cache: yes
+
+# CRI-O installation
+- name: Download CRI-O apt key
+  ansible.builtin.get_url:
+    url: "https://download.opensuse.org/repositories/isv:/cri-o:/stable:/{{ cri_o_version }}/deb/Release.key"
+    dest: /etc/apt/keyrings/cri-o-apt-keyring.asc
+    force: true
+    mode: '0640'
+  register: cri_o_apt_key
+- name: Convert CRI-O apt key to gpg format
+  ansible.builtin.command:
+    cmd: >-
+      gpg --dearmor -o /etc/apt/keyrings/cri-o-apt-keyring.gpg /etc/apt/keyrings/cri-o-apt-keyring.asc
+  when: cri_o_apt_key is changed
+- name: Add CRI-O apt repository
+  ansible.builtin.template:
+    src: cri-o.list
+    dest: /etc/apt/sources.list.d/cri-o.list
+    mode: '0644'
+  register: cri_o_apt_repo
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+  when: cri_o_apt_repo.changed
+- name: Install CRI-O
+  ansible.builtin.apt:
+    name:
+      - cri-o
+    state: present
+    update_cache: yes
+- name: Enable and start CRI-O service
+  ansible.builtin.systemd:
+    name: crio
+    enabled: yes
+    state: started

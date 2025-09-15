@@ -1,0 +1,5 @@
+---
+- name: Install NFS client package
+  apt:
+    name: nfs-common
+    update_cache: yes

@@ -1,0 +1,12 @@
+---
+- import_tasks: first_server.yml
+  when: inventory_hostname == groups['k8s-servers'][0]
+
+- import_tasks: other_servers.yml
+  when:
+    - inventory_hostname != groups['k8s-servers'][0]
+    - inventory_hostname in groups['k8s-servers']
+
+- import_tasks: workers.yml
+  when:
+    - inventory_hostname in groups['k8s-workers'] | default([])

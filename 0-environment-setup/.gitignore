@@ -1,0 +1,10 @@
+*-cloud-image
+*.if_name
+*.qcow2
+ansible.inventory
+ci-data-*
+run-ansible.sh
+ssh-node*.sh
+ssh.key
+ssh.key.pub
+ssh.sh

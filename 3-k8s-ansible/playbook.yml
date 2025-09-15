@@ -1,0 +1,52 @@
+---
+- hosts: k8s-servers,k8s-workers
+  become: true
+  vars:
+    k8s_version: 'v1.34'
+    cri_o_version: 'v1.34'
+  any_errors_fatal: true
+  roles:
+    - role: registry-configuration
+
+- hosts: k8s-servers
+  become: true
+  vars:
+    k8s_version: 'v1.34'
+    cri_o_version: 'v1.34'
+  any_errors_fatal: true
+  roles:
+    - role: api-load-balancer
+
+- hosts: k8s-servers,k8s-workers
+  become: true
+  vars:
+    k8s_version: 'v1.34'
+    cri_o_version: 'v1.34'
+  any_errors_fatal: true
+  roles:
+    - role: install-cri-o
+    - role: install-k8s
+
+- hosts: k8s-servers,k8s-workers
+  become: true
+  vars:
+    k8s_version: 'v1.34'
+    cri_o_version: 'v1.34'
+  any_errors_fatal: true
+  serial: 1
+  roles:
+    - role: bootstrap-k8s
+
+- hosts: all
+  become: true
+  roles:
+    - role: nfs-server
+      when: inventory_hostname == groups['k8s-servers'][0]
+    - role: nfs-client
+      when: inventory_hostname != groups['k8s-servers'][0]
+
+- hosts: k8s-servers[0]
+  become: true
+  roles:
+    - role: copy-kubeconfig
+    - role: services

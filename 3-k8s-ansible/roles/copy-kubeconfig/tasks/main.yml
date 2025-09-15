@@ -1,0 +1,19 @@
+---
+- name: Copy kubeconfig from first node
+  ansible.builtin.fetch:
+    src: /etc/kubernetes/super-admin.conf
+    dest: "{{ playbook_dir }}/kubeconfig.yaml"
+    flat: yes
+  delegate_to: "{{ groups['k8s-servers'][0] }}"
+  run_once: true
+
+- name: Replace server address in kubeconfig
+  local_action: 
+    module: replace
+    args:
+      path: "{{ playbook_dir }}/kubeconfig.yaml"
+      regexp: 'https://[a-zA-Z0-9.-]+:[0-9]+'
+      replace: 'https://{{ k8s_api_loadbalancer_ip }}:{{ k8s_api_loadbalancer_port }}'
+  become: false
+  run_once: true
+

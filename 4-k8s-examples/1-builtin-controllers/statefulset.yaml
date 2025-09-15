@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: alpine-statefulset
+spec:
+  serviceName: "alpine"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: alpine-statefulset
+  template:
+    metadata:
+      labels:
+        app: alpine-statefulset
+    spec:
+      containers:
+      - name: alpine
+        image: public.ecr.aws/docker/library/alpine:3.22
+        command: ["/bin/sh", "-c", "while true; do sleep 3600; done"]

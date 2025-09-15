@@ -1,0 +1,76 @@
+---
+# prerequisites
+- name: Install required packages
+  apt:
+    name:
+      - podman
+      - rsync
+    update_cache: yes
+
+# keepalived container
+- name: Create keepalived context directory
+  file:
+    path: /usr/local/src/container-keepalived
+    state: directory
+- name: Copy keepalived build context
+  ansible.posix.synchronize:
+    src: files/container-keepalived/
+    dest: /usr/local/src/container-keepalived
+    delete: yes
+    recursive: yes
+  register: keepalived_build_context
+- name: Copy keepalived systemd units
+  template:
+    src: "files/container-keepalived/{{ item }}"
+    dest: "/etc/containers/systemd/{{ item }}"
+    mode: '0640'
+  loop:
+    - keepalived.build
+    - keepalived.container
+  register: keepalived_systemd_units
+- name: Set if a reload is needed
+  set_fact:
+    keepalived_reload_needed: "{{ keepalived_build_context is changed or keepalived_systemd_units is changed }}"
+- name: Reload systemd units
+  systemd:
+    daemon_reload: yes
+  when: keepalived_reload_needed
+- name: Start keepalived service
+  systemd:
+    name: keepalived.service
+    state: "{{ 'restarted' if keepalived_reload_needed else 'started' }}"
+    enabled: yes
+
+# haproxy container
+- name: Create haproxy context directory
+  file:
+    path: /usr/local/src/container-haproxy
+    state: directory
+- name: Copy haproxy build context
+  ansible.posix.synchronize:
+    src: files/container-haproxy/
+    dest: /usr/local/src/container-haproxy
+    delete: yes
+    recursive: yes
+  register: haproxy_build_context
+- name: Copy haproxy systemd units
+  template:
+    src: "files/container-haproxy/{{ item }}"
+    dest: "/etc/containers/systemd/{{ item }}"
+    mode: '0640'
+  loop:
+    - haproxy.build
+    - haproxy.container
+  register: haproxy_systemd_units
+- name: Set if a reload is needed
+  set_fact:
+    haproxy_reload_needed: "{{ haproxy_build_context is changed or haproxy_systemd_units is changed }}"
+- name: Reload systemd units
+  systemd:
+    daemon_reload: yes
+  when: haproxy_reload_needed
+- name: Start haproxy service
+  systemd:
+    name: haproxy.service
+    state: "{{ 'restarted' if haproxy_reload_needed else 'started' }}"
+    enabled: yes

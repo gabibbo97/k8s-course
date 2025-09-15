@@ -1,0 +1,26 @@
+---
+- name: Create NFS export directory
+  file:
+    path: /srv/nfs
+    state: directory
+    mode: '0777'
+
+- name: Install NFS server package
+  apt:
+    name: nfs-kernel-server
+    update_cache: yes
+
+- name: Configure NFS exports
+  template:
+    src: exports.j2
+    dest: /etc/exports
+  notify: Restart NFS server
+
+- name: Ensure NFS server is running and enabled
+  service:
+    name: nfs-kernel-server
+    state: started
+    enabled: yes
+
+- name: Reload exports
+  command: exportfs -ra

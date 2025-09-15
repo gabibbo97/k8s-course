@@ -1,0 +1,15 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: alpine-job
+spec:
+  template:
+    metadata:
+      labels:
+        app: alpine-job
+    spec:
+      containers:
+      - name: alpine
+        image: public.ecr.aws/docker/library/alpine:3.22
+        command: ["/bin/sh", "-c", "while true; do sleep 3600; done"]
+      restartPolicy: Never

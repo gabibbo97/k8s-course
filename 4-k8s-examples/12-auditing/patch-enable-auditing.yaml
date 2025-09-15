@@ -1,0 +1,18 @@
+apiServer:
+  extraArgs:
+    - { name: audit-log-path, value: /var/log/kubernetes/audit/audit.log }
+    - { name: audit-log-maxage, value: "30" } # days
+    - { name: audit-log-maxbackup, value: "9" }
+    - { name: audit-log-maxsize, value: "64" }
+    - { name: audit-policy-file, value: /etc/kubernetes/audit-policy.yaml }
+  extraVolumes:
+  - name: audit-policy
+    hostPath: /etc/kubernetes/audit-policy.yaml
+    mountPath: /etc/kubernetes/audit-policy.yaml
+    pathType: File
+    readOnly: true
+  - name: audit-log
+    hostPath: /var/log/kubernetes/audit
+    mountPath: /var/log/kubernetes/audit
+    pathType: DirectoryOrCreate
+    readOnly: false

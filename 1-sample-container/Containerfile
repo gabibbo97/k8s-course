@@ -1,0 +1,25 @@
+FROM public.ecr.aws/docker/library/debian:trixie
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install build dependencies (e.g., gcc, make)
+# These are needed to build our sample workload
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        gcc \
+        libc-dev \
+        make \
+        bash \
+        ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy the workload source code and build script into the image
+COPY hello.c /opt/hello.c
+COPY build.sh /opt/build.sh
+
+# Build the workload using the build script
+RUN bash /opt/build.sh
+
+# Set the entrypoint to the built binary
+ENTRYPOINT ["/opt/hello"]

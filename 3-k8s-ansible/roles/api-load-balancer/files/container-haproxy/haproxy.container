@@ -1,0 +1,18 @@
+[Unit]
+Description = haproxy container
+
+[Container]
+Image = haproxy.build
+Network = host
+
+AddCapability=NET_ADMIN
+AddCapability=NET_RAW
+
+Tmpfs = /run/haproxy
+
+[Service]
+Restart = always
+TimeoutStartSec = infinity
+
+[Install]
+WantedBy = multi-user.target

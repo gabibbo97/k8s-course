@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: ca-issuer
+spec:
+  rules:
+  - host: nginx.example.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-service
+            port:
+              number: 80
+  # curl -vk --resolve nginx.example.local:443:172.16.42.142 https://nginx.example.local
+  tls:
+  - hosts:
+    - nginx.example.local
+    secretName: nginx-ingress-tls

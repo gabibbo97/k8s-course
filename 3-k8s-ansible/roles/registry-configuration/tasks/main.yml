@@ -1,0 +1,39 @@
+# Registries configuration
+- name: Create containers registries configuration directory
+  ansible.builtin.file:
+    path: /etc/containers/registries.conf.d
+    state: directory
+    mode: '0750'
+
+- name: Deploy containers registries local configuration
+  ansible.builtin.copy:
+    src: local-registry.conf
+    dest: /etc/containers/registries.conf.d/local-registry.conf
+
+- name: Create containers directory
+  ansible.builtin.file:
+    path: /etc/containers
+    state: directory
+    mode: '0750'
+- name: Create /etc/containers/auth.json
+  ansible.builtin.copy:
+    content: "{{ container_registry_auth_json | to_nice_json }}"
+    dest: /etc/containers/auth.json
+    mode: '0660'
+    force: true
+  vars:
+    container_registry_auth_json:
+      auths:
+        "registry.k8scourse.serics.eu":
+          auth: "{{ 'registry-user:registry-password' | b64encode }}"
+
+- name: Create /etc/crio/crio.conf.d
+  ansible.builtin.file:
+    path: /etc/crio/crio.conf.d
+    state: directory
+    mode: '0750'
+- name: Deploy CRI-O global auth configuration
+  ansible.builtin.copy:
+    src: cri-o.auth.conf
+    dest: /etc/crio/crio.conf.d/00-auth.conf
+    force: true

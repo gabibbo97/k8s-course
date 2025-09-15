@@ -1,0 +1,9 @@
+FROM public.ecr.aws/docker/library/debian:trixie
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y curl keepalived
+
+COPY entrypoint.sh /entrypoint
+RUN chmod +x /entrypoint
+ENTRYPOINT [ "/entrypoint" ]

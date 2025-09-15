@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: alpine-daemonset
+spec:
+  selector:
+    matchLabels:
+      app: alpine-daemonset
+  template:
+    metadata:
+      labels:
+        app: alpine-daemonset
+    spec:
+      containers:
+      - name: alpine
+        image: public.ecr.aws/docker/library/alpine:3.22
+        command: ["/bin/sh", "-c", "while true; do sleep 3600; done"]

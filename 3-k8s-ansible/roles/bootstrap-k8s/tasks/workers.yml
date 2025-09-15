@@ -1,0 +1,22 @@
+- name: Create kubeadm token on first node
+  delegate_to: "{{ groups['k8s-servers'] | first }}"
+  command: kubeadm token create --ttl 1h
+  register: kubeadm_token
+
+- name: Upload certificates on first node
+  delegate_to: "{{ groups['k8s-servers'] | first }}"
+  command: kubeadm init phase upload-certs --upload-certs
+  register: upload_certs
+
+- name: Join workers to the cluster
+  command: >-
+    kubeadm join
+    {{ k8s_api_loadbalancer_dns }}:{{ k8s_api_loadbalancer_port }}
+    --certificate-key {{ upload_certs.stdout_lines | last }}
+    --token {{ kubeadm_token.stdout.strip() }}
+    --discovery-token-unsafe-skip-ca-verification
+    --node-name {{ ansible_fqdn }}
+  register: join_cluster
+  until: join_cluster is succeeded
+  retries: 18
+  delay: 10

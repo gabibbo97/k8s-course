@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: alpine-statefulset
+spec:
+  serviceName: "alpine-headless"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: alpine-statefulset
+  template:
+    metadata:
+      labels:
+        app: alpine-statefulset
+    spec:
+      containers:
+      - name: alpine
+        image: public.ecr.aws/docker/library/alpine:3.22
+        command: ["/bin/sh", "-c"]
+        args:
+          - "while true; do date >> /data/date.txt; sleep 5; done"
+        volumeMounts:
+        - name: data
+          mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi

@@ -1,0 +1,28 @@
+---
+labels:
+  - pairs:
+      app.kubernetes.io/name: nginx
+      app.kubernetes.io/instance: nginx-example
+      app.kubernetes.io/managed-by: kustomize
+    includeSelectors: true
+    includeTemplates: true
+
+images:
+  - name: nginx
+    newName: public.ecr.aws/docker/library/nginx
+    newTag: '1.29'
+
+resources:
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+
+configMapGenerator:
+  - name: nginx-html
+    files:
+      - index.html
+
+secretGenerator:
+- name: nginx-secret
+  files:
+  - secret.html

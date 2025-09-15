@@ -1,0 +1,20 @@
+[Unit]
+Description = keepalived container
+
+[Container]
+Image = keepalived.build
+Network = host
+
+AddCapability=NET_ADMIN
+AddCapability=NET_RAW
+
+Environment=STATE={{ (inventory_hostname == groups['k8s-servers'] | first) | ternary('MASTER', 'BACKUP') }}
+Environment=INTERFACE={{ ansible_default_ipv4['interface'] }}
+Environment=APISERVER_VIP=172.16.42.5
+
+[Service]
+Restart = always
+TimeoutStartSec = infinity
+
+[Install]
+WantedBy = multi-user.target

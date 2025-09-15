@@ -1,0 +1,37 @@
+---
+- name: Initialize kubernetes cluster
+  command: >-
+    kubeadm init
+      --apiserver-bind-port 6443
+      --apiserver-cert-extra-sans {{ k8s_api_loadbalancer_ip }}
+      --control-plane-endpoint {{ k8s_api_loadbalancer_dns }}:{{ k8s_api_loadbalancer_port }}
+      --node-name {{ ansible_fqdn }}
+      --upload-certs
+      --pod-network-cidr 10.244.0.0/16
+      --service-cidr 10.245.0.0/16
+      --service-dns-domain cluster.local
+
+- name: Deploy CNI
+  command: >-
+    kubectl
+    --kubeconfig /etc/kubernetes/super-admin.conf
+    apply
+    -f https://raw.githubusercontent.com/cloudnativelabs/kube-router/refs/tags/v2.5.0/daemonset/kubeadm-kuberouter.yaml
+  register: deploy_cni
+  until: deploy_cni is succeeded
+  retries: 18
+  delay: 10
+
+- name: Wait for coredns to be ready
+  command: >-
+    kubectl
+    --kubeconfig /etc/kubernetes/super-admin.conf
+    wait
+    --for=condition=Available
+    deployment/coredns
+    -n kube-system 
+    --timeout=30s
+  register: wait_coredns
+  until: wait_coredns is succeeded
+  retries: 18
+  delay: 10

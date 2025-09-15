@@ -1,0 +1,2 @@
+# {{ ansible_managed }}
+/srv/nfs {% for node in groups['all'] %}{{ hostvars[node]['ansible_default_ipv4']['address'] }}(rw,sync,no_subtree_check,no_root_squash){% if not loop.last %} {% endif %}{% endfor %}
