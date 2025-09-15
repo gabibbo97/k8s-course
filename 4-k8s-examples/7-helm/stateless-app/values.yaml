@@ -1,0 +1,27 @@
+replicaCount: 2
+
+image:
+  repository: public.ecr.aws/docker/library/nginx
+  tag: "1.29"
+  pullPolicy: IfNotPresent
+
+service:
+  type: LoadBalancer
+  port: 80
+
+ingress:
+  enabled: true
+  host: nginx.example.local
+
+configmap:
+  indexHtml: |
+    <html>
+      <head><title>Stateless NGINX</title></head>
+      <body>
+        <h1>Hello from ConfigMap!</h1>
+      </body>
+    </html>
+
+secret:
+  secretHtml: |
+    <html><head><title>Secret Page</title></head><body><h1>Secret content from Secret!</h1></body></html>

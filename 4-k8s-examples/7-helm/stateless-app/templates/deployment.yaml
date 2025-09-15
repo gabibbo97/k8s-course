@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-deployment
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: nginx
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: html-config
+          mountPath: /usr/share/nginx/html/index.html
+          subPath: index.html
+        - name: html-secret
+          mountPath: /usr/share/nginx/html/secret.html
+          subPath: secret.html
+      volumes:
+      - name: html-config
+        configMap:
+          name: {{ .Release.Name }}-html
+      - name: html-secret
+        secret:
+          secretName: {{ .Release.Name }}-secret
