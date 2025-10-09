@@ -19,7 +19,7 @@
     --node-name {{ ansible_fqdn }}
   register: join_cluster
   until: join_cluster is succeeded
-  retries: 18
+  retries: 30
   delay: 10
 
 - name: Untaint masters
@@ -30,10 +30,12 @@
     nodes
     --all
     node-role.kubernetes.io/control-plane-
+  delegate_to: "{{ groups['k8s-servers'] | first }}"
   register: untaint_masters
   until: untaint_masters is succeeded
-  retries: 18
+  retries: 30
   delay: 10
+  ignore_errors: true
 
 - name: Unexclude masters from load balancers
   command: >-
@@ -46,5 +48,6 @@
   delegate_to: "{{ groups['k8s-servers'] | first }}"
   register: unlabel_masters
   until: unlabel_masters is succeeded
-  retries: 18
+  retries: 30
   delay: 10
+  ignore_errors: true

@@ -18,5 +18,5 @@
     --node-name {{ ansible_fqdn }}
   register: join_cluster
   until: join_cluster is succeeded
-  retries: 18
+  retries: 30
   delay: 10

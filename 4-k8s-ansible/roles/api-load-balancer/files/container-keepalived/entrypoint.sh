@@ -26,6 +26,7 @@ tee /etc/keepalived/keepalived.conf <<-EOF
 global_defs {
     router_id LVS_DEVEL
 }
+
 vrrp_script check_apiserver {
   script "/etc/keepalived/check_apiserver.sh"
   interval 3

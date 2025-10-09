@@ -16,10 +16,10 @@
     kubectl
     --kubeconfig /etc/kubernetes/super-admin.conf
     apply
-    -f https://raw.githubusercontent.com/cloudnativelabs/kube-router/refs/tags/v2.5.0/daemonset/kubeadm-kuberouter.yaml
+    -f https://raw.githubusercontent.com/cloudnativelabs/kube-router/refs/tags/v2.6.1/daemonset/kubeadm-kuberouter.yaml
   register: deploy_cni
   until: deploy_cni is succeeded
-  retries: 18
+  retries: 30
   delay: 10
 
 - name: Wait for coredns to be ready
@@ -33,5 +33,5 @@
     --timeout=30s
   register: wait_coredns
   until: wait_coredns is succeeded
-  retries: 18
+  retries: 30
   delay: 10

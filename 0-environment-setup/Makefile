@@ -2,7 +2,7 @@
 # Cloud image
 #
 
-CLOUD_IMAGE_VERSION := 20250915-2236
+CLOUD_IMAGE_VERSION := 20251008-2259
 CLOUD_IMAGE_URL := https://cloud.debian.org/images/cloud/trixie/daily/$(CLOUD_IMAGE_VERSION)/debian-13-genericcloud-amd64-daily-$(CLOUD_IMAGE_VERSION).qcow2
 
 debian-cloud-image: debian-cloud-image-$(CLOUD_IMAGE_VERSION).qcow2 remove-old-cloud-images
@@ -45,6 +45,11 @@ logs:
 restart:
 	$(MAKE) down
 	$(MAKE) up
+	$(MAKE) wait
+
+.PHONY: wait
+wait:
+	until ansible all, -i ansible.inventory -m ping; do sleep 1; done
 
 .PHONY: restart-dns
 restart-dns:
