@@ -1,4 +1,8 @@
 ---
+- fail:
+  when:
+    - stop_before_bootstrap | default(false)
+
 - import_tasks: first_server.yml
   when: inventory_hostname == groups['k8s-servers'][0]
 

@@ -8,3 +8,4 @@ ssh-node*.sh
 ssh.key
 ssh.key.pub
 ssh.sh
+*.iso
