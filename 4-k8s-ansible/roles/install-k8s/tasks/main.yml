@@ -1,6 +1,6 @@
 ---
 # prerequisites
-- name: Install required packages
+- name: Install required packages for kubernetes
   apt:
     name:
       - gpg
@@ -9,34 +9,54 @@
 # k8s installation
 - name: Download k8s apt key
   ansible.builtin.get_url:
-    url: "https://pkgs.k8s.io/core:/stable:/{{ k8s_version }}/deb/Release.key"
+    url: "https://pkgs.k8s.io/core:/stable:/v{{ k8s_version_short }}/deb/Release.key"
     dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
     force: true
     mode: '0640'
   register: k8s_apt_key
+
 - name: Convert k8s apt key to gpg format
   ansible.builtin.command:
     cmd: >-
       gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg /etc/apt/keyrings/kubernetes-apt-keyring.asc
   when: k8s_apt_key is changed
+
 - name: Add k8s apt repository
   ansible.builtin.template:
     src: k8s.list
     dest: /etc/apt/sources.list.d/k8s.list
     mode: '0644'
   register: k8s_apt_repo
+
 - name: Update apt cache
   ansible.builtin.apt:
     update_cache: yes
   when: k8s_apt_repo.changed
+
 - name: Install k8s
   ansible.builtin.apt:
     name:
-      - kubeadm
-      - kubectl
-      - kubelet
+      - "kubeadm={{ k8s_version }}-1.1"
+      - "kubectl={{ k8s_version }}-1.1"
+      - "kubelet={{ k8s_version }}-1.1"
     state: present
     update_cache: yes
+
+# - name: Hold k8s kubeadm at current version
+#   ansible.builtin.dpkg_selections:
+#     name: kubeadm
+#     selection: hold
+
+# - name: Hold k8s kubectl at current version
+#   ansible.builtin.dpkg_selections:
+#     name: kubectl
+#     selection: hold
+
+# - name: Hold k8s kubelet at current version
+#   ansible.builtin.dpkg_selections:
+#     name: kubelet
+#     selection: hold
+
 - name: Hold k8s packages at current version
   ansible.builtin.dpkg_selections:
     name: "{{ item }}"

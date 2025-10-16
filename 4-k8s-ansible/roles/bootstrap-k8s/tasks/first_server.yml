@@ -17,6 +17,7 @@
     --kubeconfig /etc/kubernetes/super-admin.conf
     apply
     -f https://raw.githubusercontent.com/cloudnativelabs/kube-router/refs/tags/v2.6.1/daemonset/kubeadm-kuberouter.yaml
+    --wait
   register: deploy_cni
   until: deploy_cni is succeeded
   retries: 30
@@ -35,3 +36,10 @@
   until: wait_coredns is succeeded
   retries: 30
   delay: 10
+
+- name: Restart rollout of coredns
+  command: >-
+    kubectl
+    --kubeconfig /etc/kubernetes/super-admin.conf
+    -n kube-system
+    rollout restart deployment/coredns

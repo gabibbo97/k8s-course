@@ -1,0 +1,31 @@
+- name: Untaint masters
+  command: >-
+    kubectl
+    --kubeconfig /etc/kubernetes/super-admin.conf
+    taint
+    nodes
+    --all
+    node-role.kubernetes.io/control-plane-
+  run_once: true
+  delegate_to: "{{ groups['k8s-servers'] | first }}"
+  register: untaint_masters
+  until: untaint_masters is succeeded
+  retries: 30
+  delay: 10
+  ignore_errors: true
+
+- name: Unexclude masters from load balancers
+  command: >-
+    kubectl
+    --kubeconfig /etc/kubernetes/super-admin.conf
+    label
+    nodes
+    --all
+    node.kubernetes.io/exclude-from-external-load-balancers-
+  run_once: true
+  delegate_to: "{{ groups['k8s-servers'] | first }}"
+  register: unlabel_masters
+  until: unlabel_masters is succeeded
+  retries: 30
+  delay: 10
+  ignore_errors: true

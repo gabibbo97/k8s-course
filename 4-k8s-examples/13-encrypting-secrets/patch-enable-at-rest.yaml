@@ -1,0 +1,10 @@
+apiServer:
+  extraArgs:
+    - name: encryption-provider-config
+      value: /etc/kubernetes/encryption-provider-config.yaml
+  extraVolumes:
+  - name: encryption-provider-config
+    hostPath: /etc/kubernetes/encryption-provider-config.yaml
+    mountPath: /etc/kubernetes/encryption-provider-config.yaml
+    pathType: File
+    readOnly: true

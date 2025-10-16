@@ -87,6 +87,8 @@ echo 'k8s_api_loadbalancer_dns=api-lb.k8scourse.serics.eu' >> ansible.inventory
 echo 'k8s_api_loadbalancer_dns_srv=_k8s-server._tcp.k8scourse.serics.eu' >> ansible.inventory
 echo 'k8s_api_loadbalancer_port=8443' >> ansible.inventory
 echo 'k8s_api_loadbalancer_ip=172.16.42.5' >> ansible.inventory
+echo 'cri_o_version=1.34' >> ansible.inventory
+echo 'k8s_version=1.34.0' >> ansible.inventory
 
 echo '' >> ansible.inventory
 echo '[k8s-servers]' >> ansible.inventory

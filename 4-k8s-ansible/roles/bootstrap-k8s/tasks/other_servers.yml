@@ -1,10 +1,10 @@
 - name: Create kubeadm token on first node
-  delegate_to: "{{ groups['k8s-servers'] | first }}"
+  delegate_to: "{{ groups['k8s-servers'][0] }}"
   command: kubeadm token create --ttl 1h
   register: kubeadm_token
 
 - name: Upload certificates on first node
-  delegate_to: "{{ groups['k8s-servers'] | first }}"
+  delegate_to: "{{ groups['k8s-servers'][0] }}"
   command: kubeadm init phase upload-certs --upload-certs
   register: upload_certs
 
@@ -21,33 +21,3 @@
   until: join_cluster is succeeded
   retries: 30
   delay: 10
-
-- name: Untaint masters
-  command: >-
-    kubectl
-    --kubeconfig /etc/kubernetes/super-admin.conf
-    taint
-    nodes
-    --all
-    node-role.kubernetes.io/control-plane-
-  delegate_to: "{{ groups['k8s-servers'] | first }}"
-  register: untaint_masters
-  until: untaint_masters is succeeded
-  retries: 30
-  delay: 10
-  ignore_errors: true
-
-- name: Unexclude masters from load balancers
-  command: >-
-    kubectl
-    --kubeconfig /etc/kubernetes/super-admin.conf
-    label
-    nodes
-    --all
-    node.kubernetes.io/exclude-from-external-load-balancers-
-  delegate_to: "{{ groups['k8s-servers'] | first }}"
-  register: unlabel_masters
-  until: unlabel_masters is succeeded
-  retries: 30
-  delay: 10
-  ignore_errors: true

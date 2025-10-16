@@ -7,65 +7,48 @@
 - Backup important data
   - `cp -r /etc/kubernetes ...` on a server node
 
-## Steps
+## Autmated upgrade
 
-### 1. Drain the Node
-
-This safely evicts workloads:
+This assumes there exists a kubeconfig file at `/etc/kubernetes/admin.conf` (for all nodes).
 
 ```sh
-kubectl drain <node-name> --ignore-daemonsets --delete-emptydir-data
+# settings
+export NODE_NAME=<node-name>
+export K8S_VERSION=<version>
+export KUBECONFIG=/etc/kubernetes/admin.conf
+export IS_FIRST_CONTROL_PLANE=1
+
+# checks
+if ! [ -f "${KUBECONFIG}" ]; then
+  echo "KUBECONFIG file not found!"
+  exit 1
+fi
+
+# cordon
+kubectl drain "${NODE_NAME}" --ignore-daemonsets --delete-emptydir-data
+
+# upgrade kubeadm
+apt-mark unhold kubeadm
+apt-get update
+apt-get install -y kubeadm="${K8S_VERSION}-1.1"
+apt-mark hold kubeadm
+
+# upgrade node
+if [ $IS_FIRST_CONTROL_PLANE -eq 1 ]; then
+  kubeadm upgrade plan "${K8S_VERSION}" --yes
+  kubeadm upgrade apply "${K8S_VERSION}" --yes
+else
+  kubeadm upgrade node --yes
+fi
+
+# upgrade kubelet and kubectl
+apt-mark unhold kubelet kubectl
+apt-get update
+apt-get install -y kubelet="${K8S_VERSION}-1.1" kubectl="${K8S_VERSION}-1.1"
+apt-mark hold kubelet kubectl
+systemctl daemon-reload
+systemctl restart kubelet
+
+# uncordon
+kubectl uncordon "${NODE_NAME}"
 ```
-
-### 2. Upgrade kubeadm
-
-Update the `kubeadm` tool:
-
-```sh
-sudo apt-mark unhold kubeadm
-sudo apt-get update
-sudo apt-get install -y kubeadm=<version>
-sudo apt-mark hold kubeadm
-```
-Replace `<version>` with the desired Kubernetes version (e.g., `1.29.0-00`).
-
-### 3. Verify Upgrade Plan
-
-Check the upgrade plan:
-
-```sh
-sudo kubeadm upgrade plan
-```
-
-### 4. Upgrade the Node
-
-Apply the upgrade:
-
-```sh
-sudo kubeadm upgrade node
-```
-
-### 5. Upgrade kubelet and kubectl
-
-Update the node components:
-
-```sh
-sudo apt-mark unhold kubelet kubectl
-sudo apt-get update
-sudo apt-get install -y kubelet=<version> kubectl=<version>
-sudo systemctl restart kubelet
-sudo apt-mark hold kubelet kubectl
-```
-
-### 6. Uncordon the Node
-
-Bring the node back online:
-
-```sh
-kubectl uncordon <node-name>
-```
-
-## Notes
-
-- Repeat for each node in the cluster.
-- Monitor workloads

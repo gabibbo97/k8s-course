@@ -1,8 +1,11 @@
+---
 apiVersion: audit.k8s.io/v1
 kind: Policy
 rules:
-- level: Metadata
+# log all requests made to configmaps and secrets
 - level: Request
   resources:
   - group: "" # core API group
     resources: ["configmaps", "secrets"]
+# log all events at the Metadata level
+- level: Metadata

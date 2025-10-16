@@ -1,0 +1,14 @@
+---
+apiVersion: apiserver.config.k8s.io/v1
+kind: EncryptionConfiguration
+resources:
+  - resources:
+      - secrets
+      - configmaps
+    providers:
+      - secretbox:
+          keys:
+            - name: key1
+              # Generated with: head -c 32 /dev/urandom | base64
+              secret: SKCDEjnnJnREmK1ACTka/RH+i1VB4yyKIidRsedsL8Y=
+      - identity: {} # this fallback allows reading unencrypted secrets

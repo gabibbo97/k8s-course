@@ -11,6 +11,9 @@
     - inventory_hostname != groups['k8s-servers'][0]
     - inventory_hostname in groups['k8s-servers']
 
+- import_tasks: untaint.yml
+  when: inventory_hostname == groups['k8s-servers'][-1]
+
 - import_tasks: workers.yml
   when:
     - inventory_hostname in groups['k8s-workers'] | default([])
