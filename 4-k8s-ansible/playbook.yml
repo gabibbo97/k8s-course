@@ -1,10 +1,10 @@
 ---
-- hosts: k8s-servers,k8s-workers
-  become: true
-  any_errors_fatal: true
-  roles:
-    - role: registry-configuration
-      tags: [ 'registry-configuration' ]
+# - hosts: k8s-servers,k8s-workers
+#   become: true
+#   any_errors_fatal: true
+#   roles:
+#     - role: registry-configuration
+#       tags: [ 'registry-configuration' ]
 
 - hosts: k8s-servers
   become: true

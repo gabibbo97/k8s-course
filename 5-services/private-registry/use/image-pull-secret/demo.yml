@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: private-registry-demo-ips
+spec:
+  containers:
+    - name: private-registry-demo
+      image: registry.k8scourse.serics.eu/fedora:42
+      command:
+        - /bin/sh
+        - -c
+        - >-
+          while true; do date; sleep 10; done
+  imagePullSecrets:
+    - name: demo-ips

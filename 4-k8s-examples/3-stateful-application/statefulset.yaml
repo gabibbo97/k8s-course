@@ -4,7 +4,7 @@ metadata:
   name: alpine-statefulset
 spec:
   serviceName: "alpine-headless"
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: alpine-statefulset
@@ -18,10 +18,11 @@ spec:
         image: public.ecr.aws/docker/library/alpine:3.22
         command: ["/bin/sh", "-c"]
         args:
-          - "while true; do date >> /data/date.txt; sleep 5; done"
+          - "while true; do date >> /data/date.txt; cat /etc/hostname >> /data/date.txt; sleep 5; done"
         volumeMounts:
         - name: data
           mountPath: /data
+      terminationGracePeriodSeconds: 3
   volumeClaimTemplates:
   - metadata:
       name: data

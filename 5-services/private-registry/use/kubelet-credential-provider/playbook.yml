@@ -1,0 +1,48 @@
+---
+- hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    # Config
+    - name: Copy credential provider config file
+      copy:
+        src: credential-provider-config.yaml
+        dest: /etc/kubernetes/kubelet-credential-provider-config.yaml
+        force: true
+      register: credential_provider_config
+    # Binary
+    - name: Create binary destination directory
+      file:
+        path: /var/lib/kubelet/credential-provider-plugins
+        state: directory
+    - name: Copy credential provider binary
+      copy:
+        src: simple-provider.py
+        dest: /var/lib/kubelet/credential-provider-plugins/simple-provider
+        mode: '0755'
+        force: true
+      register: credential_provider_binary
+    # Kubelet config
+    - name: Ensure kubelet extra args are set
+      copy:
+        content: >-
+          KUBELET_EXTRA_ARGS=
+          --image-credential-provider-config=/etc/kubernetes/kubelet-credential-provider-config.yaml
+          --image-credential-provider-bin-dir=/var/lib/kubelet/credential-provider-plugins
+        dest: /etc/default/kubelet
+        force: true
+      register: kubelet_extra_args
+    # Daemon reload
+    - name: Reload systemd
+      systemd:
+        daemon_reload: true
+      when: kubelet_extra_args.changed
+    # Kubelet restart
+    - name: Restart kubelet
+      systemd:
+        name: kubelet
+        state: restarted
+      when: >-
+        credential_provider_config.changed or
+        credential_provider_binary.changed or
+        kubelet_extra_args.changed

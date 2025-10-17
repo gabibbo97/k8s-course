@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: private-registry-demo
+spec:
+  containers:
+    - name: private-registry-demo
+      image: registry.k8scourse.serics.eu/fedora:42
+      command:
+        - /bin/sh
+        - -c
+        - >-
+          while true; do date; sleep 10; done

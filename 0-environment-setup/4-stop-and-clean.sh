@@ -35,3 +35,6 @@ done
 
 ## Remove bridge
 sudo ip link delete br0 || true
+
+## clean etc hosts
+ansible --become localhost, -m ansible.builtin.lineinfile -a "path=/etc/hosts regexp='^172[.]16[.]42[.]142' state=absent"

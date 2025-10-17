@@ -5,7 +5,7 @@ N_NODES=${N_NODES:-3}
 # create etc hosts
 #
 
-ansible --become localhost, -m ansible.builtin.lineinfile -a "path=/etc/hosts line='172.16.42.142 registry.k8scourse.serics.eu' regexp='^172[.]16[.]42[.]142' state=present"
+ansible --become localhost, -m ansible.builtin.lineinfile -a "path=/etc/hosts line='172.16.42.142 registry.k8scourse.serics.eu s3.k8scourse.serics.eu' regexp='^172[.]16[.]42[.]142' state=present"
 
 #
 # number of servers
@@ -23,8 +23,9 @@ for node_i in $(seq 1 "${N_NODES}"); do
     if [ $node_i -le $N_SERVERS ]; then
       DNSMASQ_ARGS="${DNSMASQ_ARGS} --srv-host=_k8s-server._tcp.k8scourse.serics.eu,node${node_i}.k8scourse.serics.eu.,6443,1,1"
     fi
-    DNSMASQ_ARGS="${DNSMASQ_ARGS} --address=/registry.k8scourse.serics.eu/172.16.42.142"
 done
+DNSMASQ_ARGS="${DNSMASQ_ARGS} --address=/registry.k8scourse.serics.eu/172.16.42.142"
+DNSMASQ_ARGS="${DNSMASQ_ARGS} --address=/s3.k8scourse.serics.eu/172.16.42.142"
 
 # shellcheck disable=SC2086
 sudo systemd-run \

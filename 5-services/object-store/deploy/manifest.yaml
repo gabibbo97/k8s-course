@@ -1,0 +1,126 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: object-store
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: object-store
+  namespace: object-store
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: object-store-env
+  namespace: object-store
+data:
+  MINIO_DOMAIN: s3.k8scourse.serics.eu
+  MINIO_COMPRESSION_ENABLE: 'on'
+  MINIO_COMPRESSION_EXTENSIONS: '*'
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: object-store-env
+  namespace: object-store
+type: Opaque
+data:
+  MINIO_ROOT_USER: bWluaW8= # minio
+  MINIO_ROOT_PASSWORD: bWluaW8xMjM= # minio123
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: object-store
+  namespace: object-store
+spec:
+  selector:
+    kubernetes.io/app: object-store
+  ports:
+  - name: http
+    port: 9000
+    targetPort: http
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: object-store
+  namespace: object-store
+  annotations:
+    cert-manager.io/cluster-issuer: ca-issuer
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+spec:
+  rules:
+  - host: s3.k8scourse.serics.eu
+    http:
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: object-store
+              port:
+                number: 9000
+  - host: '*.s3.k8scourse.serics.eu'
+    http:
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: object-store
+              port:
+                number: 9000
+  tls:
+  - hosts:
+    - '*.s3.k8scourse.serics.eu'
+    - s3.k8scourse.serics.eu
+    secretName: object-store-tls
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: object-store
+  namespace: object-store
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      kubernetes.io/app: object-store
+  template:
+    metadata:
+      labels:
+        kubernetes.io/app: object-store
+    spec:
+      containers:
+      - name: object-store
+        image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+        args:
+        - server
+        - /var/lib/s3
+        envFrom:
+        - configMapRef:
+            name: object-store-env
+        - secretRef:
+            name: object-store-env
+        ports:
+        - name: http
+          containerPort: 9000
+        volumeMounts:
+        - name: storage
+          mountPath: /var/lib/s3
+      volumes:
+      - name: storage
+        persistentVolumeClaim:
+          claimName: object-store
