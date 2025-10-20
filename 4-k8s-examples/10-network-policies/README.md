@@ -43,6 +43,32 @@ To test connectivity between pods, exec into a pod and use tools like `nc`, `tel
 
 3. Apply network policies and test again to see the restrictions in effect.
 
+Here are some example checks you can run after applying specific policies:
+
+- **01-deny-all-ingress.yaml** – from the backend namespace, try to reach the
+  frontend service. The connection should be blocked:
+  ```bash
+  kubectl exec -n backend deployment/backend-app -- nc -zv frontend-service.frontend 80
+  ```
+
+- **02-deny-all-egress.yaml** – from the backend namespace, attempt to reach an
+  external address. This should fail until egress is allowed:
+  ```bash
+  kubectl exec -n backend deployment/backend-app -- nc -zv 8.8.8.8 53
+  ```
+
+- **03-allow-frontend-to-backend.yaml** – confirm that frontend pods can talk
+  to the backend on port 5432:
+  ```bash
+  kubectl exec -n frontend deployment/frontend-app -- nc -zv backend-service.backend 5432
+  ```
+
+- **05-allow-dns-egress.yaml** – after applying the DNS egress rule, verify that
+  DNS lookups work from the backend namespace:
+  ```bash
+  kubectl exec -n backend deployment/backend-app -- nslookup kubernetes.default
+  ```
+
 ## Cleanup:
 
 ```bash
