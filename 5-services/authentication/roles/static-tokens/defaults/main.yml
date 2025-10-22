@@ -1,0 +1,8 @@
+---
+k8s_static_token_users:
+# tr -dc a-zA-Z0-9 < /dev/urandom | head -c 32
+- token: n7VmDaNueoEbZMYzHObq04udeMZnkte4
+  name: static-token-user
+  uid: '1000'
+  groups:
+  - static-token-users

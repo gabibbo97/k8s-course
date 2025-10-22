@@ -40,169 +40,25 @@
 # NFS CSI
 #
 
-- name: Deploy NFS CSI driver
-  shell:
-    cmd: curl -skSL https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/v4.11.0/deploy/install-driver.sh | bash -s v4.11.0 --
-  environment:
-    KUBECONFIG: /etc/kubernetes/super-admin.conf
-
-- name: Deploy NFS CSI driver storage class
-  command:
-    cmd: kubectl apply -f -
-    stdin: |-
-      ---
-      apiVersion: storage.k8s.io/v1
-      kind: StorageClass
-      metadata:
-        name: nfs-csi
-        annotations:
-          storageclass.kubernetes.io/is-default-class: "true"
-      provisioner: nfs.csi.k8s.io
-      parameters:
-        server: 172.16.42.10
-        share: /srv/nfs
-      reclaimPolicy: Delete
-      volumeBindingMode: Immediate
-      allowVolumeExpansion: true
-      mountOptions:
-        - nfsvers=4.1
-      # ---
-      # apiVersion: snapshot.storage.k8s.io/v1
-      # kind: VolumeSnapshotClass
-      # metadata:
-      #   name: csi-nfs-snapclass
-      # parameters:
-      #   server: nfs-server.k8scourse.serics.eu
-      #   share: /srv/nfs
-      # driver: nfs.csi.k8s.io
-      # deletionPolicy: Delete
-  environment:
-    KUBECONFIG: /etc/kubernetes/super-admin.conf
+- import_tasks: nfs-csi.yaml
 
 #
 # MetalLB
 #
 
-- name: Deploy MetalLB
-  shell:
-    cmd: kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.15.2/config/manifests/metallb-native.yaml
-  environment:
-    KUBECONFIG: /etc/kubernetes/super-admin.conf
-
-- name: Deploy MetalLB address pool and L2 advertisement
-  command:
-    cmd: kubectl apply -f -
-    stdin: |-
-      ---
-      apiVersion: metallb.io/v1beta1
-      kind: IPAddressPool
-      metadata:
-        name: address-pool
-        namespace: metallb-system
-      spec:
-        addresses:
-          - 172.16.42.100-172.16.42.200
-      ---
-      apiVersion: metallb.io/v1beta1
-      kind: L2Advertisement
-      metadata:
-        name: address-pool
-        namespace: metallb-system
-      spec: {}
-  environment:
-    KUBECONFIG: /etc/kubernetes/super-admin.conf
-  register: metallb_result
-  until: metallb_result is succeeded
-  retries: 180
-  delay: 1
+- import_tasks: metallb.yaml
 
 #
 # NGINX Ingress Controller
 #
 
-- name: Deploy NGINX Ingress Controller
-  kubernetes.core.helm:
-    release_name: ingress-nginx
-    release_namespace: ingress-nginx
-    create_namespace: true
-    chart_repo_url: https://kubernetes.github.io/ingress-nginx
-    chart_ref: ingress-nginx
-    chart_version: 4.13.3
-    release_values:
-      controller:
-        ingressClassResource:
-          name: nginx
-          enabled: true
-          default: true
-        service:
-          enabled: true
-          type: LoadBalancer
-          annotations:
-            metallb.io/loadBalancerIPs: 172.16.42.142
-        admissionWebhooks:
-          enabled: false
-  environment:
-    K8S_AUTH_KUBECONFIG: /etc/kubernetes/super-admin.conf
+- import_tasks: ingress-controller.yaml
 
 #
 # Cert-Manager
 #
 
-- name: Install cert-manager
-  kubernetes.core.helm:
-    release_name: cert-manager
-    release_namespace: cert-manager
-    create_namespace: true
-    chart_ref: oci://quay.io/jetstack/charts/cert-manager
-    chart_version: v1.19.1
-    release_values:
-      crds:
-        enabled: true
-  environment:
-    K8S_AUTH_KUBECONFIG: /etc/kubernetes/super-admin.conf
-
-- name: Deploy cert-manager issuer
-  command:
-    cmd: kubectl apply -f -
-    stdin: |-
-      ---
-      apiVersion: cert-manager.io/v1
-      kind: ClusterIssuer
-      metadata:
-        name: selfsigned-cluster-issuer
-      spec:
-        selfSigned: {}
-      ---
-      apiVersion: cert-manager.io/v1
-      kind: Certificate
-      metadata:
-        name: selfsigned-ca
-        namespace: cert-manager
-      spec:
-        isCA: true
-        commonName: selfsigned-ca
-        secretName: root-secret
-        privateKey:
-          algorithm: ECDSA
-          size: 256
-        issuerRef:
-          name: selfsigned-cluster-issuer
-          kind: ClusterIssuer
-          group: cert-manager.io
-      ---
-      apiVersion: cert-manager.io/v1
-      kind: ClusterIssuer
-      metadata:
-        name: ca-issuer
-      spec:
-        ca:
-          secretName: root-secret
-  environment:
-    KUBECONFIG: /etc/kubernetes/super-admin.conf
-  register: cert_manager_result
-  until: cert_manager_result is succeeded
-  retries: 180
-  delay: 1
+- import_tasks: cert-manager.yaml
 
 #
 # Container Registry
@@ -214,4 +70,3 @@
 #     stdin: "{{ lookup('file', 'container-registry.yml') }}"
 #   environment:
 #     KUBECONFIG: /etc/kubernetes/super-admin.conf
-

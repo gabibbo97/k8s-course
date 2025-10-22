@@ -2,7 +2,7 @@
 # Cloud image
 #
 
-CLOUD_IMAGE_VERSION := 20251015-2266
+CLOUD_IMAGE_VERSION := 20251022-2273
 CLOUD_IMAGE_URL := https://cloud.debian.org/images/cloud/trixie/daily/$(CLOUD_IMAGE_VERSION)/debian-13-genericcloud-amd64-daily-$(CLOUD_IMAGE_VERSION).qcow2
 
 debian-cloud-image: debian-cloud-image-$(CLOUD_IMAGE_VERSION).qcow2 remove-old-cloud-images

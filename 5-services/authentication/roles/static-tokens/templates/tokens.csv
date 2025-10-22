@@ -1,0 +1,3 @@
+{% for user in k8s_static_token_users %}
+{{ user.token }},{{ user.name }},{{ user.uid }},{% if user.groups | length > 1 %}"{{ user.groups | join(',') }}"{% else %}{{ user.groups[0] }}{% endif %}
+{% endfor %}

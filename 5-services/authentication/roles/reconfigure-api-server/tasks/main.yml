@@ -1,0 +1,63 @@
+---
+- block:
+    - name: Grab kubeadm-config
+      ansible.builtin.command:
+        cmd: >-
+          kubectl get configmap kubeadm-config
+          -n kube-system
+          -o json
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      register: kubeadm_config
+    - name: Copy patch
+      ansible.builtin.copy:
+        dest: /tmp/patch.json
+        content: "{{ kubeadm_config_patch | to_nice_yaml }}"
+    - name: Patch kubeadm-config
+      ansible.builtin.command:
+        cmd: >-
+          kubectl patch
+          --local
+          --type merge
+          --output json
+          -f -
+          --patch-file /tmp/patch.json
+        stdin: "{{ (kubeadm_config.stdout | from_json)['data']['ClusterConfiguration'] }}"
+      register: kubeadm_config_patched
+    - name: Create kubeadm-config-patched.yaml
+      ansible.builtin.copy:
+        dest: /tmp/kubeadm-config-patched.yaml
+        content: "{{ kubeadm_config_patched.stdout | from_json | to_nice_yaml }}"
+    - name: Apply patched kubeadm-config
+      ansible.builtin.shell:
+        cmd: >-
+          kubectl
+          -n kube-system
+          create configmap kubeadm-config
+          --from-file=ClusterConfiguration=/tmp/kubeadm-config-patched.yaml
+          -o yaml
+          --dry-run=client | kubectl -n kube-system apply -f -
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+  when: inventory_hostname == groups['k8s-servers'][0]
+
+- name: Grab kubeadm-config
+  ansible.builtin.command:
+    cmd: >-
+      kubectl get configmap kubeadm-config
+      -n kube-system
+      -o json
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  register: kubeadm_config
+
+- name: Create kubeadm-config-patched.yaml
+  ansible.builtin.copy:
+    dest: /tmp/kubeadm-config-patched.yaml
+    content: "{{ (kubeadm_config.stdout | from_json)['data']['ClusterConfiguration'] }}"
+
+- name: Reconfigure API server
+  ansible.builtin.command:
+    cmd: >-
+      kubeadm init phase control-plane apiserver 
+      --config /tmp/kubeadm-config-patched.yaml

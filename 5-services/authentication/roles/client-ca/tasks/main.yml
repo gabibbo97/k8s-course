@@ -1,0 +1,115 @@
+---
+- block:
+    - name: Create secret for the kubernetes CA
+      ansible.builtin.command:
+        cmd: >-
+          kubectl create secret tls client-ca-secret --cert=/etc/kubernetes/pki/ca.crt --key=/etc/kubernetes/pki/ca.key -o yaml --dry-run=client | kubectl apply -f -
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+
+    - name: Deploy certificate authority and demo user certificate using cert-manager
+      ansible.builtin.command:
+        cmd: >-
+          kubectl apply -f -
+        stdin: |-
+          # ---
+          # apiVersion: cert-manager.io/v1
+          # kind: Issuer
+          # metadata:
+          #   name: client-ca-signer
+          # spec:
+          #   selfSigned: {}
+          # ---
+          # apiVersion: cert-manager.io/v1
+          # kind: Certificate
+          # metadata:
+          #   name: client-ca
+          # spec:
+          #   isCA: true
+          #   commonName: client-ca
+          #   secretName: client-ca-secret
+          #   issuerRef:
+          #     name: client-ca-signer
+          #     kind: Issuer
+          ---
+          apiVersion: cert-manager.io/v1
+          kind: Issuer
+          metadata:
+            name: client-ca-issuer
+          spec:
+            ca:
+              secretName: client-ca-secret
+          ---
+          apiVersion: cert-manager.io/v1
+          kind: Certificate
+          metadata:
+            name: demo-user
+          spec:
+            secretName: demo-user-cert
+            duration: 8760h # 1 year
+            subject:
+              organizations:
+                - demo-org
+            commonName: demo-user
+            usages:
+              - client auth
+            issuerRef:
+              name: client-ca-issuer
+              kind: Issuer
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+  when: inventory_hostname == groups['k8s-servers'][0]
+
+- name: Copy client CA certificate
+  ansible.builtin.shell:
+    cmd: >-
+      kubectl get secret client-ca-secret -o jsonpath="{.data['tls\.crt']}" | base64 -d - > /etc/kubernetes/pki/client-ca.crt
+  args:
+    creates: /etc/kubernetes/pki/client-ca.crt
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  register: copy_client_ca
+  until: copy_client_ca is success
+  retries: 60
+  delay: 1
+
+- name: Get client certificate
+  ansible.builtin.shell:
+    cmd: >-
+      kubectl get secret demo-user-cert -o jsonpath="{.data['tls\.crt']}" | base64 -d - > /etc/kubernetes/pki/demo-user.crt
+  args:
+    creates: /etc/kubernetes/pki/demo-user.crt
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  register: get_client_cert
+  until: get_client_cert is success
+  retries: 60
+  delay: 1
+
+- name: Get client certificate key
+  ansible.builtin.shell:
+    cmd: >-
+      kubectl get secret demo-user-cert -o jsonpath="{.data['tls\.key']}" | base64 -d - > /etc/kubernetes/pki/demo-user.key
+  args:
+    creates: /etc/kubernetes/pki/demo-user.key
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  register: get_client_key
+  until: get_client_key is success
+  retries: 60
+  delay: 1
+
+# - ansible.builtin.include_role:
+#     name: reconfigure-api-server
+#   vars:
+#     kubeadm_config_patch:
+#       apiServer:
+#         extraArgs:
+#           - name: client-ca-file
+#             value: /etc/kubernetes/pki/client-ca.crt
+#         extraVolumes:
+#           - name: client-ca-file
+#             hostPath: /etc/kubernetes/pki/client-ca.crt
+#             mountPath: /etc/kubernetes/pki/client-ca.crt
+#             pathType: File
+#             readOnly: true

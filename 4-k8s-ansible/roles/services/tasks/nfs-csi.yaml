@@ -1,0 +1,39 @@
+---
+- name: Deploy NFS CSI driver
+  shell:
+    cmd: curl -skSL https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/v4.11.0/deploy/install-driver.sh | bash -s v4.11.0 --
+  environment:
+    KUBECONFIG: /etc/kubernetes/super-admin.conf
+
+- name: Deploy NFS CSI driver storage class
+  command:
+    cmd: kubectl apply -f -
+    stdin: |-
+      ---
+      apiVersion: storage.k8s.io/v1
+      kind: StorageClass
+      metadata:
+        name: nfs-csi
+        annotations:
+          storageclass.kubernetes.io/is-default-class: "true"
+      provisioner: nfs.csi.k8s.io
+      parameters:
+        server: 172.16.42.10
+        share: /srv/nfs
+      reclaimPolicy: Delete
+      volumeBindingMode: Immediate
+      allowVolumeExpansion: true
+      mountOptions:
+        - nfsvers=4.1
+      # ---
+      # apiVersion: snapshot.storage.k8s.io/v1
+      # kind: VolumeSnapshotClass
+      # metadata:
+      #   name: csi-nfs-snapclass
+      # parameters:
+      #   server: nfs-server.k8scourse.serics.eu
+      #   share: /srv/nfs
+      # driver: nfs.csi.k8s.io
+      # deletionPolicy: Delete
+  environment:
+    KUBECONFIG: /etc/kubernetes/super-admin.conf

@@ -1,0 +1,6 @@
+---
+- hosts: k8s-servers
+  become: true
+  roles:
+    - { name: client-ca, tags: [ 'client-ca' ] }
+    - { name: static-tokens, tags: [ 'static-tokens' ] }

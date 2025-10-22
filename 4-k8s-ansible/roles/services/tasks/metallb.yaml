@@ -1,0 +1,33 @@
+---
+- name: Deploy MetalLB
+  shell:
+    cmd: kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.15.2/config/manifests/metallb-native.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/super-admin.conf
+
+- name: Deploy MetalLB address pool and L2 advertisement
+  command:
+    cmd: kubectl apply -f -
+    stdin: |-
+      ---
+      apiVersion: metallb.io/v1beta1
+      kind: IPAddressPool
+      metadata:
+        name: address-pool
+        namespace: metallb-system
+      spec:
+        addresses:
+          - 172.16.42.100-172.16.42.200
+      ---
+      apiVersion: metallb.io/v1beta1
+      kind: L2Advertisement
+      metadata:
+        name: address-pool
+        namespace: metallb-system
+      spec: {}
+  environment:
+    KUBECONFIG: /etc/kubernetes/super-admin.conf
+  register: metallb_result
+  until: metallb_result is succeeded
+  retries: 180
+  delay: 1

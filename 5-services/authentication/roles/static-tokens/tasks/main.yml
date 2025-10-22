@@ -1,0 +1,20 @@
+---
+- name: Copy static token file
+  ansible.builtin.template:
+    src: tokens.csv
+    dest: /etc/kubernetes/static-tokens.csv
+
+- ansible.builtin.include_role:
+    name: reconfigure-api-server
+  vars:
+    kubeadm_config_patch:
+      apiServer:
+        extraArgs:
+          - name: token-auth-file
+            value: /etc/kubernetes/static-tokens.csv
+        extraVolumes:
+          - name: token-auth-file
+            hostPath: /etc/kubernetes/static-tokens.csv
+            mountPath: /etc/kubernetes/static-tokens.csv
+            pathType: File
+            readOnly: true
