@@ -6,6 +6,7 @@ spec:
   containers:
     - name: private-registry-demo
       image: registry.k8scourse.serics.eu/fedora:42
+      imagePullPolicy: Always
       command:
         - /bin/sh
         - -c

@@ -50,6 +50,8 @@ metadata:
   namespace: container-registry
 type: Opaque
 data: {}
+  # # head -c 33 /dev/urandom | base64 | base64
+  # REGISTRY_HTTP_SECRET: bm5wYWRsS3JSeTR0UVRuOVIreDZwZU9YallWbTZuaXhPMmovbFhtYi9YUlgK
 ---
 apiVersion: v1
 kind: Service
@@ -72,6 +74,7 @@ metadata:
   namespace: container-registry
   annotations:
     cert-manager.io/cluster-issuer: ca-issuer
+    nginx.ingress.kubernetes.io/whitelist-source-range: "172.16.42.0/24"
     nginx.ingress.kubernetes.io/proxy-body-size: "0"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
