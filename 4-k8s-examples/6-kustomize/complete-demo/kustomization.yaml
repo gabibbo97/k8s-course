@@ -1,0 +1,28 @@
+resources:
+  - ../base
+
+commonAnnotations:
+  k8scourse.serics.eu/test: 'annotation'
+
+commonLabels:
+  k8scourse.serics.eu/test: 'label'
+
+namePrefix: pfx-
+nameSuffix: -sfx
+
+configMapGenerator:
+- name: index2
+  files:
+  - index2.html=page.html
+
+secretGenerator:
+- name: sectest
+  literals:
+    - a=b
+
+patchesJson6902:
+- target:
+    version: v1
+    kind: Deployment
+    name: nginx-deployment
+  path: add_index2.yaml

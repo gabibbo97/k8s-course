@@ -1,0 +1,11 @@
+- op: add
+  path: /spec/template/spec/containers/0/volumeMounts/-
+  value:
+    name: index2
+    mountPath: /usr/share/nginx/html/index2.html
+- op: add
+  path: /spec/template/spec/volumes/-
+  value:
+    name: index2
+    configMap:
+      name: index2
