@@ -1,3 +1,5 @@
 namespace: demo-namespace
+
 resources:
   - ../base
+  - ns.yaml

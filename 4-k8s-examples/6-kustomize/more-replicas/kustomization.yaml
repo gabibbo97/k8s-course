@@ -3,5 +3,5 @@ bases:
 
 nameSuffix: -more-replicas
 
-patches:
+patchesStrategicMerge:
   - more-replicas.yaml
