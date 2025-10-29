@@ -1,0 +1,3 @@
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "3101"

@@ -1,0 +1,11 @@
+---
+namespace: monitoring
+
+resources:
+- ../1-api-servers
+- node_exporter.yml
+
+images:
+- name: node-exporter
+  newName: quay.io/prometheus/node-exporter
+  newTag: v1.10.2

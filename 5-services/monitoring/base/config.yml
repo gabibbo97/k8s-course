@@ -1,0 +1,59 @@
+global:
+  scrape_interval: 30s
+
+scrape_config_files:
+  - /etc/prometheus/scrape_configs/*.yml
+
+rule_files:
+  - /etc/prometheus/rules/*.yml
+
+scrape_configs:
+  # scrape Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+  # scraping using Kubernetes service discovery
+  - job_name: 'kubernetes'
+    kubernetes_sd_configs:
+      # look for pods
+      - role: pod
+    relabel_configs:
+      # scrape only pods that have the annotation prometheus.io/scrape set to 'true'
+      - source_labels: [__meta_kubernetes_pod_annotationpresent_prometheus_io_scrape]
+        action: keep
+        regex: 'true'
+      # set the port to the value of the prometheus.io/port annotation
+      - source_labels:
+          - "__meta_kubernetes_pod_ip"
+          - "__meta_kubernetes_pod_annotation_prometheus_io_port"
+        separator: ';'
+        target_label: __address__
+        replacement: $1:$2
+        regex: '([^;]+);([^;]+)'
+        action: replace
+      # set the path to the value of the prometheus.io/metrics-path annotation
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_metrics_path]
+        target_label: __metrics_path__
+        action: replace
+        regex: '(.+)'
+        replacement: $1
+      # grab all pod labels and add them as Prometheus labels
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+        replacement: "${1}"
+      # add namespace and pod name as labels
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+      # add the node name as a label
+      - source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: node
+      # add the container image as a label
+      - source_labels: [__meta_kubernetes_pod_container_image]
+        target_label: container_image
+      # add the pod readiness and phase as labels
+      - source_labels: [__meta_kubernetes_pod_ready]
+        target_label: pod_ready
+      - source_labels: [__meta_kubernetes_pod_phase]
+        target_label: pod_phase

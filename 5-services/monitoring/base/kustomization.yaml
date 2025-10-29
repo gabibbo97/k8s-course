@@ -1,0 +1,28 @@
+---
+namespace: monitoring
+
+resources:
+- rbac.yaml
+- prometheus.yaml
+
+labels:
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/managed-by: kustomize
+
+configMapGenerator:
+- name: prometheus-config
+  files:
+  - prometheus.yml=config.yml
+
+images:
+- name: alpine
+  newName: public.ecr.aws/docker/library/alpine
+  newTag: latest
+- name: prometheus
+  newName: quay.io/prometheus/prometheus
+  newTag: v3.7.2
+- name: node-exporter
+  newName: quay.io/prometheus/node-exporter
+  newTag: v1.10.2

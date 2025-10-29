@@ -1,0 +1,32 @@
+---
+scrape_configs:
+  # API servers
+  - job_name: kubernetes_api_servers
+    scheme: https
+    tls_config:
+      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    authorization:
+      credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    kubernetes_sd_configs:
+    - role: endpointslice
+      namespaces:
+        names:
+        - default
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_endpointslice_name]
+      regex: kubernetes
+      action: keep
+  # Nodes
+  - job_name: kubernetes_nodes
+    scheme: https
+    tls_config:
+      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      insecure_skip_verify: true # kubelet uses a certificate which does not contain the node's IP as a SAN
+    authorization:
+      credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    kubernetes_sd_configs:
+    # The node role discovers one target per cluster node with the address defaulting to the Kubelet's HTTP port. 
+    - role: node
+    relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)

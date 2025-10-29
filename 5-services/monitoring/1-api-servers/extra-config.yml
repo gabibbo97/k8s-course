@@ -1,0 +1,18 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: prometheus
+spec:
+  template:
+    spec:
+      containers:
+      - name: prometheus
+        volumeMounts:
+        - name: kubernetes-apis-scrape-config
+          mountPath: /etc/prometheus/scrape_configs/kubernetes_apis.yml
+          subPath: kubernetes_apis.yml
+      volumes:
+      - name: kubernetes-apis-scrape-config
+        configMap:
+          name: prometheus-kubernetes-apis-scrape-config

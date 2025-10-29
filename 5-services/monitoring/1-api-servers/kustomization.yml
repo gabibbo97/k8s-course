@@ -1,0 +1,13 @@
+---
+namespace: monitoring
+
+resources:
+- ../base
+
+configMapGenerator:
+- name: prometheus-kubernetes-apis-scrape-config
+  files:
+  - kubernetes_apis.yml=scrape_config.yml
+
+patches:
+- path: extra-config.yml

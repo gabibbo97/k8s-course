@@ -1,0 +1,16 @@
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      url: http://prometheus.monitoring.svc.cluster.local:9090
+      access: proxy
+      isDefault: true
+    - name: Loki
+      type: loki
+      url: http://loki-gateway.logging.svc.cluster.local
+      access: proxy
+
+adminUser: admin
+adminPassword: admin123
