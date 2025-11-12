@@ -3,6 +3,7 @@ kind: Pod
 metadata:
   name: netadmin-alpine
 spec:
+  hostNetwork: true
   containers:
   - name: alpine
     image: public.aws.ecr/docker/library/alpine:3.22

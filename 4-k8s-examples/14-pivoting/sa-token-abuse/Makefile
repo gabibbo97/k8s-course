@@ -1,5 +1,5 @@
 apply:
-	kubectl apply -f pod.yaml
+	kubectl apply -f .
 
 clean:
-	kubectl delete -f pod.yaml || true
+	kubectl delete -f . || true

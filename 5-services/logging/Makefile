@@ -5,6 +5,7 @@ install-loki:
 	helm upgrade --install \
 		--create-namespace --namespace logging \
 		--values values-loki.yml \
+		--version 6.44.0 \
 		loki grafana/loki
 
 .PHONY: install-promtail

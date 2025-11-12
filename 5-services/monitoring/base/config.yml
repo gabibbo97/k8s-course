@@ -23,6 +23,7 @@ scrape_configs:
         action: keep
         regex: 'true'
       # set the port to the value of the prometheus.io/port annotation
+      #   <pod_ip>;<annotation_value>
       - source_labels:
           - "__meta_kubernetes_pod_ip"
           - "__meta_kubernetes_pod_annotation_prometheus_io_port"

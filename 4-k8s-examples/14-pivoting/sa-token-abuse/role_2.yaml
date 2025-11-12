@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: extra-sa
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: extra-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: extra-sa
+roleRef:
+  kind: ClusteRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
